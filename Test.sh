@@ -18,6 +18,39 @@ ConnectToDataBase(){
     if [ -d "$TARGET_DB" ]; then
         cd "$TARGET_DB"
         echo "You are now inside '$TARGET_DB'"
+        while true; do
+            read -p "Enter Number:
+            1-Create Table.
+            2-List Tabels.
+            3-Drop Table.
+            4-Insert Into Tabels.
+            5-SelectFromTables.
+            6-Delete From Tables.
+            7-Update Table.
+            8-Exit.
+            : " userInput
+
+        if [ "$userInput" = "1" ]; then
+            CreateTable
+        elif [ "$userInput" = "2" ]; then
+            ListTabels
+        elif [ "$userInput" = "3" ]; then
+            DropTable
+        elif [ "$userInput" = "4" ]; then
+            InsertIntoTabels
+        elif [ "$userInput" = "5" ]; then
+            SelectFromTables
+        elif [ "$userInput" = "6" ]; then
+            DeleteFromTables
+        elif [ "$userInput" = "7" ]; then
+            UpdateTable
+        elif [ "$userInput" = "8" ]; then
+            echo "Exit...."
+            break  
+        else
+            echo "Invalid input! Please enter a number between 1-8."
+        fi
+        done
     else
         echo "Error: Database '$dbName' not found!"
     fi
@@ -67,6 +100,29 @@ CreateTable(){
     fi
 }
 
+ListTabels(){
+    echo "Listed Tabels"
+}
+
+DropTable(){
+    echo "Dropped Tabels"
+}
+
+InsertIntoTabels(){
+    echo "Inserted into Tabels"
+}
+
+SelectFromTables(){
+    echo "Selected Into Tabels"
+}
+
+DeleteFromTables(){
+    echo "Deleted From Tables"
+}
+
+UpdateTable(){
+    echo "Ubdated Tables"
+}
 
 value=()
 header=""
