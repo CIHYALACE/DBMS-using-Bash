@@ -1,15 +1,44 @@
-# read -p "Enter Your Name: " name
-# read -p "Enter A number: " num
-# skills=("HTML" "CSS" "JavaScript")
-# declare -A info
+CreateDB(){
+    read -p "Enter DataBase Name: " DBName
+    mkdir DataBases/$DBName
+    echo "DataBase Named $DBName Created Successfully! "
+}
 
-# read -p "Enter Your Name: " info["name"]
-# read -p "Enter Your Age: " info["age"]
+ListDB(){
+    DB_PATH="/f/Bash Script/DataBases"
+    find "$DB_PATH" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
+}
 
+ConnectToDataBase(){
+    DB_PATH="/f/Bash Script/DataBases"
 
-value=()
-header=""
-read -p "Enter 1 To Create DataBase , 2 to Exit: " userInput
+    read -p "Enter the database name to enter: " dbName
+    TARGET_DB="$DB_PATH/$dbName"
+
+    if [ -d "$TARGET_DB" ]; then
+        cd "$TARGET_DB"
+        echo "You are now inside '$TARGET_DB'"
+    else
+        echo "Error: Database '$dbName' not found!"
+    fi
+}
+
+DropDataBase(){
+    DB_PATH="/f/Bash Script/DataBases"
+
+    read -p "Enter the database name to Drop: " dbName
+    TARGET_DB="$DB_PATH/$dbName"
+
+    if [ -d "$TARGET_DB" ]; then
+        read -p "Are You Sure You Gonna Lose All Data In $TARGET_DB (Yes , No): " confirmation
+        if [ "${confirmation,,}" = "yes" ];then
+            rm -r "$TARGET_DB"
+            echo "'${TARGET_DB##*/}' Deleted Successfully"
+        fi        
+    else
+        echo "Error: Database '$dbName' not found!"
+    fi
+}
 
 CreateTable(){
     read -p "Enter tbale Name: " tableName
@@ -39,8 +68,31 @@ CreateTable(){
 }
 
 
-if [ "$userInput" == "1" ];then
-    CreateTable
-elif [ "$userInput" == "2" ];then
-    echo "Exit...."
-fi
+value=()
+header=""
+echo "Welcome To UwU DBMS! "
+
+while true; do
+    read -p "Enter Number:
+        1-Create DataBase.
+        2-List DataBases.
+        3-Connect To DataBase.
+        4-Drop DataBase.
+        5-Exit.
+        : " userInput
+
+    if [ "$userInput" = "1" ]; then
+        CreateDB
+    elif [ "$userInput" = "2" ]; then
+        ListDB
+    elif [ "$userInput" = "3" ]; then
+        ConnectToDataBase
+    elif [ "$userInput" = "4" ]; then
+        DropDataBase
+    elif [ "$userInput" = "5" ]; then
+        echo "Exit...."
+        break  
+    else
+        echo "Invalid input! Please enter a number between 1-5."
+    fi
+done
