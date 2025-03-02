@@ -79,13 +79,21 @@ CreateTable(){
     if [[ -f "$tableName.txt" ]]; then
         echo "Table exists!"
     else
+        header=""
         while true; do
-
+            read -p "Enter 1 to add a header, 2 to finish: " userInput
             if [ "$userInput" == "1" ]; then
-                read -p "Enter Header Name: " var
-                value+=("$var")
-                header="$header - ${var}"
-                echo "Header Updated: $header"
+            read -p "Enter Header Name: " var
+            while true; do
+                read -p "Enter Data Type for $var (int/str): " dataType
+                if [[ "$dataType" == "int" || "$dataType" == "str" ]]; then
+                    break
+                else
+                    echo "Invalid data type! Please enter 'int' or 'str'."
+                fi
+            done
+            header="$header - $var($dataType)"
+            echo "Header Updated: $header"
             elif [ "$userInput" == "2" ]; then
                 echo "$header" >> $tableName.txt
                 echo "Table Created Succesfully"
@@ -94,22 +102,56 @@ CreateTable(){
             else
                 read -p "Ivalid Input , Enter 1 to create Databas, 2 to Exit: " userInput
             fi
-
-            read -p "Enter 1 to add Another one , 2 to Exit: " userInput
         done
     fi
 }
 
 ListTabels(){
-    echo "Listed Tabels"
+    DB_PATH="/f/Bash Script/DataBases"
+    TARGET_DB="$DB_PATH/$dbName"
+
+    if [ -d "$TARGET_DB" ]; then
+        if [ -z "$(ls -A "$TARGET_DB")" ]; then
+            echo "There are no tables in the database."
+        else
+            echo "Tables in the database '$dbName':"
+            ls "$TARGET_DB" | grep -v '^records'
+        fi
+    else
+        echo "Error: Database '$dbName' not found!"
+    fi
 }
 
 DropTable(){
-    echo "Dropped Tabels"
+    read -p "Enter the table name to drop: " tableName
+
+    if [[ -f "$tableName.txt" ]]; then
+        rm "$tableName.txt"
+        echo "Table '$tableName' dropped successfully."
+    else
+        echo "Error: Table '$tableName' not found!"
+    fi
 }
 
 InsertIntoTabels(){
-    echo "Inserted into Tabels"
+    read -p "Enter the table name to insert into: " tableName
+
+    if [[ -f "$tableName.txt" ]]; then
+        headers=$(head -n 1 "$tableName.txt")
+        IFS=' - ' read -r -a headerArray <<< "$headers"
+        declare -a values
+
+        for header in "${headerArray[@]}"; do
+            read -p "Enter value for $header: " value
+            values+=(" - $value")
+        done
+
+        row=$(IFS=' - '; echo "${values[*]}")
+        echo -e "\n$row" >> "$tableName.txt"
+        echo "Data inserted successfully into '$tableName'."
+    else
+        echo "Error: Table '$tableName' not found!"
+    fi
 }
 
 SelectFromTables(){
