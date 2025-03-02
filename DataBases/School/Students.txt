@@ -1,1 +1,2 @@
- - id - f_name - l_name - age 
+ - id(int) - f_name(str) - l_name(str) - age(int) - grade(str)
+

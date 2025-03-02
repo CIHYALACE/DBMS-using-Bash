@@ -79,7 +79,6 @@ CreateTable(){
     if [[ -f "$tableName.txt" ]]; then
         echo "Table exists!"
     else
-        header=""
         while true; do
             read -p "Enter 1 to add a header, 2 to finish: " userInput
             if [ "$userInput" == "1" ]; then
@@ -92,7 +91,7 @@ CreateTable(){
                     echo "Invalid data type! Please enter 'int' or 'str'."
                 fi
             done
-            header="$header - $var($dataType)"
+            header="$header- ${var}($dataType)"
             echo "Header Updated: $header"
             elif [ "$userInput" == "2" ]; then
                 echo "$header" >> $tableName.txt
@@ -142,8 +141,10 @@ InsertIntoTabels(){
         declare -a values
 
         for header in "${headerArray[@]}"; do
-            read -p "Enter value for $header: " value
-            values+=(" - $value")
+            if [[ -n "$header" ]]; then
+                read -p "Enter value for $header: " value
+                values+=(" - $value")
+            fi
         done
 
         row=$(IFS=' - '; echo "${values[*]}")
@@ -155,31 +156,56 @@ InsertIntoTabels(){
 }
 
 SelectFromTables(){
-   read -p "Enter the table name to select from: " tableName
+    read -p "Enter the table name to select from: " tableName
 
     if [[ -f "$tableName.txt" ]]; then
         headers=$(head -n 1 "$tableName.txt")
         IFS=' - ' read -r -a headerArray <<< "$headers"
 
         echo "Available columns: ${headerArray[*]}"
-        read -p "Enter the columns you want to view (separated by spaces): " -a selectedColumns
+        read -p "Do you want to view specific rows? (yes/no): " viewSpecific
 
-        declare -a selectedIndices
-        for col in "${selectedColumns[@]}"; do
+        if [[ "$viewSpecific" == "yes" ]]; then
+            read -p "Enter the column name to filter by: " columnName
+
+            # Find the index of the column to filter by
+            columnIndex=-1
             for i in "${!headerArray[@]}"; do
-                if [[ "${headerArray[$i]}" == "$col" ]]; then
-                    selectedIndices+=("$i")
+                if [[ "${headerArray[$i]}" == "$columnName" ]]; then
+                    columnIndex=$i
+                    break
                 fi
             done
-        done
 
-        while IFS= read -r line; do
-            IFS=' - ' read -r -a rowArray <<< "$line"
-            for index in "${selectedIndices[@]}"; do
-                printf "%s - " "${rowArray[$index]}"
-            done
+            if [[ $columnIndex -eq -1 ]]; then
+                echo "Error: Column '$columnName' not found!"
+                return
+            fi
+
+            read -p "Enter the value to filter by: " value
+
+            # Display the headers
+            printf "%-15s" "${headerArray[@]}"
             echo
-        done < "$tableName.txt"
+
+            # Read and display the rows that match the value in the specified column
+            while IFS= read -r line; do
+                IFS=' - ' read -r -a rowArray <<< "$line"
+                if [[ "${rowArray[$columnIndex]}" == "$value" ]]; then
+                    printf "%-15s" "${rowArray[@]}"
+                    echo
+                fi
+            done < "$tableName.txt"
+        else
+            # Display the entire content of the table
+            printf "%-15s" "${headerArray[@]}"
+            echo
+            tail -n +2 "$tableName.txt" | while IFS= read -r line; do
+                IFS=' - ' read -r -a rowArray <<< "$line"
+                printf "%-15s" "${rowArray[@]}"
+                echo
+            done
+        fi
     else
         echo "Error: Table '$tableName' not found!"
     fi
@@ -195,7 +221,6 @@ DeleteFromTables(){
         echo "Available columns: ${headerArray[*]}"
         read -p "Enter the column name to use for deletion: " columnName
 
-        # Find the index of the column to use for deletion
         columnIndex=-1
         for i in "${!headerArray[@]}"; do
             if [[ "${headerArray[$i]}" == "$columnName" ]]; then
@@ -228,7 +253,66 @@ DeleteFromTables(){
 }
 
 UpdateTable(){
-    echo "Ubdated Tables"
+    read -p "Enter the table name to update: " tableName
+
+    if [[ -f "$tableName.txt" ]]; then
+        headers=$(head -n 1 "$tableName.txt")
+        IFS=' - ' read -r -a headerArray <<< "$headers"
+
+        echo "Current headers: ${headerArray[*]}"
+        read -p "Do you want to update an existing header or add a new one? (update/add): " action
+
+        if [[ "$action" == "update" ]]; then
+            read -p "Enter the header name to update: " oldHeader
+
+            headerIndex=-1
+            for i in "${!headerArray[@]}"; do
+                if [[ "${headerArray[$i]}" == "$oldHeader" ]]; then
+                    headerIndex=$i
+                    break
+                fi
+            done
+
+            if [[ $headerIndex -eq -1 ]]; then
+                echo "Error: Header '$oldHeader' not found!"
+                return
+            fi
+
+            read -p "Enter the new header name: " newHeader
+            while true; do
+                read -p "Enter Data Type for $newHeader (int/str): " dataType
+                if [[ "$dataType" == "int" || "$dataType" == "str" ]]; then
+                    break
+                else
+                    echo "Invalid data type! Please enter 'int' or 'str'."
+                fi
+            done
+
+            headerArray[$headerIndex]="$newHeader($dataType)"
+        elif [[ "$action" == "add" ]]; then
+            read -p "Enter the new header name: " newHeader
+            while true; do
+                read -p "Enter Data Type for $newHeader (int/str): " dataType
+                if [[ "$dataType" == "int" || "$dataType" == "str" ]]; then
+                    break
+                else
+                    echo "Invalid data type! Please enter 'int' or 'str'."
+                fi
+            done
+
+            headerArray+=("$newHeader($dataType)")
+        else
+            echo "Invalid action! Please enter 'update' or 'add'."
+            return
+        fi
+
+        newHeaders=$(IFS=' - '; echo "${headerArray[*]}")
+
+        sed -i "1s/.*/$newHeaders/" "$tableName.txt"
+        echo "Header updated successfully in '$tableName'."
+    else
+        echo "Error: Table '$tableName' not found!"
+    fi
 }
 
 value=()

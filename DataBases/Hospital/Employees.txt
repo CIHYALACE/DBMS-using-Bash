@@ -1,0 +1,3 @@
+ -   - id(int) - f_name(str) - l_name(str) - age(int)
+
+ -   - 1  - Abdo  - Youssef  - 24
