@@ -186,7 +186,45 @@ SelectFromTables(){
 }
 
 DeleteFromTables(){
-    echo "Deleted From Tables"
+    read -p "Enter the table name to delete from: " tableName
+
+    if [[ -f "$tableName.txt" ]]; then
+        headers=$(head -n 1 "$tableName.txt")
+        IFS=' - ' read -r -a headerArray <<< "$headers"
+
+        echo "Available columns: ${headerArray[*]}"
+        read -p "Enter the column name to use for deletion: " columnName
+
+        # Find the index of the column to use for deletion
+        columnIndex=-1
+        for i in "${!headerArray[@]}"; do
+            if [[ "${headerArray[$i]}" == "$columnName" ]]; then
+                columnIndex=$i
+                break
+            fi
+        done
+
+        if [[ $columnIndex -eq -1 ]]; then
+            echo "Error: Column '$columnName' not found!"
+            return
+        fi
+
+        read -p "Enter the value to delete rows by: " value
+
+        tempFile=$(mktemp)
+
+        while IFS= read -r line; do
+            IFS=' - ' read -r -a rowArray <<< "$line"
+            if [[ "${rowArray[$columnIndex]}" != "$value" ]]; then
+                echo "$line" >> "$tempFile"
+            fi
+        done < "$tableName.txt"
+
+        mv "$tempFile" "$tableName.txt"
+        echo "Rows with $columnName = $value deleted successfully from '$tableName'."
+    else
+        echo "Error: Table '$tableName' not found!"
+    fi
 }
 
 UpdateTable(){
