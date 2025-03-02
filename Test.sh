@@ -155,7 +155,34 @@ InsertIntoTabels(){
 }
 
 SelectFromTables(){
-    echo "Selected Into Tabels"
+   read -p "Enter the table name to select from: " tableName
+
+    if [[ -f "$tableName.txt" ]]; then
+        headers=$(head -n 1 "$tableName.txt")
+        IFS=' - ' read -r -a headerArray <<< "$headers"
+
+        echo "Available columns: ${headerArray[*]}"
+        read -p "Enter the columns you want to view (separated by spaces): " -a selectedColumns
+
+        declare -a selectedIndices
+        for col in "${selectedColumns[@]}"; do
+            for i in "${!headerArray[@]}"; do
+                if [[ "${headerArray[$i]}" == "$col" ]]; then
+                    selectedIndices+=("$i")
+                fi
+            done
+        done
+
+        while IFS= read -r line; do
+            IFS=' - ' read -r -a rowArray <<< "$line"
+            for index in "${selectedIndices[@]}"; do
+                printf "%s - " "${rowArray[$index]}"
+            done
+            echo
+        done < "$tableName.txt"
+    else
+        echo "Error: Table '$tableName' not found!"
+    fi
 }
 
 DeleteFromTables(){
